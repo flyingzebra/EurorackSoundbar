@@ -23,7 +23,7 @@ This sketch, for what it's worth, outlines all elements including the Piano; exa
 2) Best compromise between good bass production and small enclosure volume.
 3) Rich sound spectrum and spatial perception ideal for instrument sound reproduction.
 4) Optional built-in passive filter.
-5) Die-cast and airleak-proof speaker enclosure.
+5) Die-cast, anti-reflection and airleak-proof speaker enclosure.
 6) Vibration isolation between table & enclosure.
 7) Does not vibrate or glide off the table.
 8) Re-openable, allowing replacement of speakers provided with inside fixture.
