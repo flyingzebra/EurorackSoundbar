@@ -13,5 +13,5 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 4) Providing maximum leg space horizontally and vertically
 5) Height-adjustable to some extent
 
-<a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/photos/sketch.jpg><img src="/photos/sketch.jpg?raw=true" width=30% align="left"/></a>This sketch, for what it's worth, outlines all elements including the Piano; exact measures and additional features however will come later.
+<a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/photos/sketch.jpg><img src="/photos/sketch.jpg?raw=true" width=30% align="left"/></a>This sketch, for what it's worth, outlines all elements including the Piano; exact measures and additional features however will come later; they obviously depend on the keyboard one has purchased.
 
