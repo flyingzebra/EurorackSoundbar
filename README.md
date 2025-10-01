@@ -8,7 +8,7 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 3) Design a soundbar including a standardised built-in space for replacable electronics : A Eurorack Soundbar as it were!
 
 # Furniture requirements
-1) Elegant & aesthetic, fitting ones living room after all.
+1) Elegant & aesthetic, fitting ones living room
 2) Sturdy enough to carry 50Kg=110lbs
 4) Providing maximum leg space horizontally and vertically
 5) Height-adjustable to some extent
