@@ -55,4 +55,5 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 
 # Getting sketchy with it
 <a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=40% align=left block></a>
-This is the initial sketch, for what it's worth, outlining all elements including the Piano; we'll come back later on the exact measures and additional features; obviously depending on the MIDI keyboard outer dimensions one has purchased.
+This is the initial sketch, for what it's worth, outlining all elements including the Piano; we'll come back later on the exact measures and additional features; obviously depending on the MIDI keyboard outer dimensions one has purchased.  This is your first step, planning how this soundbar will fit best fit behind your MIDI keyboard, the outer dimensions of the table, how your knees will ideally fit under that table, and many other ergonomical considerations.
+
