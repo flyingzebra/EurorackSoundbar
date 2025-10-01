@@ -42,6 +42,7 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
    - Amp (2 x 30-80W)
    - Piano connector face plate (USB-midi, MIDI-in/out)
    - Synth module (MIDI-in to audio)
+
 3.6) Optional Eurorack modules - just brainstorming<br>
    - Battery module providing mobile power
    - Additional experimental synths (without patch cable clutter)
