@@ -9,6 +9,9 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 * Design a slim, good-looking table on wheels carrying about 30Kg=66lbs of keyboard and another 20Kg=44lbs of soundbar.
 * Design a soundbar including a standardised built-in space for replacable electronics : **A Eurorack Soundbar as it were!**
 
+<a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Piano_Speaker_Glance.png><img src="/illustrations/Piano_Speaker_Glance.png?raw=true" width=100% block></a>
+
+
 # Requirements
 ## Furniture
 1.1) Elegant & aesthetically matching the MIDI keyboard<br>
