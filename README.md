@@ -9,9 +9,18 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 
 # Furniture requirements
 1) Elegant & aesthetic, fitting ones living room.
-2) Sturdy enough to carry 50Kg=110lbs.
+2) Providing table surface fitting Piano Keyboard + Soundbar.
+3) Sturdy enough to carry 50Kg=110lbs.
 4) Providing maximum leg space horizontally and vertically.
 5) Height-adjustable to some extent.
 
 <a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=30% align="left"/></a>This sketch, for what it's worth, outlines all elements including the Piano; exact measures and additional features however will come later; they obviously depend on the keyboard one has purchased.
 
+# Speaker enclosure requirements
+1) Perfectly fitting keyboard width, and height aligned with the top of the speaker grills
+2) Best compromise between good bass production and small enclosure volume
+3) Rich sound spectrum and spatial perception ideal for instrument sound reproduction
+4) Optional built-in passive filter
+5) Vibration and leak-proof re-openable enclosure & not vibrating down the table
+
+# Electronics enclosure
