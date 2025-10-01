@@ -16,7 +16,7 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 ## Furniture
 1.1) Elegant & aesthetically matching the MIDI keyboard<br>
 1.2) Providing table surface fitting Piano Keyboard + Soundbar.<br>
-1.3) Sturdy enough to carry at least 50Kg=110lbs of weight<br>
+1.3) Sturdy enough to bear stress and strain caused by ~50Kg=110lbs of weight<br>
 1.4) Providing maximum leg space horizontally and vertically.<br>
 1.5) Height-adjustable to some extent.<br>
 1.6) Piano-black glossy paint finish.<br>
