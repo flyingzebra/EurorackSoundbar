@@ -1,5 +1,5 @@
 # Eurorack Soundbar
-Goal: A table for a MIDI keyboard with fitting speaker & modular electronics like synth, amp, anything!
+Goal: A table with fitting speaker & synth electronics for a MIDI keyboard.
 
 <a href="https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Clavinova CLP 153S.png"><img src="/illustrations/Clavinova CLP 153S.png?raw=true" width=40% align=left block></a>
 
