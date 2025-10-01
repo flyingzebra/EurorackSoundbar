@@ -14,13 +14,23 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 4) Providing maximum leg space horizontally and vertically.
 5) Height-adjustable to some extent.
 
-<a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=30% align="left"/></a>This sketch, for what it's worth, outlines all elements including the Piano; exact measures and additional features however will come later; they obviously depend on the keyboard one has purchased.
+<a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=40%></a>
 
-# Speaker enclosure requirements
-1) Perfectly fitting keyboard width, and height aligned with the top of the speaker grills
-2) Best compromise between good bass production and small enclosure volume
-3) Rich sound spectrum and spatial perception ideal for instrument sound reproduction
-4) Optional built-in passive filter
-5) Vibration and leak-proof re-openable enclosure & not vibrating down the table
+This sketch, for what it's worth, outlines all elements including the Piano; exact measures and additional features however will come later; they obviously depend on the keyboard one has purchased.
 
-# Electronics enclosure
+# Speaker enclosure - passive part - requirements
+1) Perfectly fitting keyboard width, and height aligned with the top of the speaker grills.
+2) Best compromise between good bass production and small enclosure volume.
+3) Rich sound spectrum and spatial perception ideal for instrument sound reproduction.
+4) Optional built-in passive filter.
+5) Die-cast and airleak-proof speaker enclosure.
+6) Vibration isolation between table & enclosure.
+7) Does not vibrate or glide off the table.
+8) Re-openable, allowing replacement of speakers provided with inside fixture.
+9) All speaker leads and filter leads come straight out of the pressure cabinet. (No electrical circuits inside)
+10) One common connector (male part) providing electrically separate access to all enclosed speakers and filters.
+
+# Electronics enclosure - active part- requirements
+1) Common connector (female part, heading towards the amplifier) with dispatching jumpers 
+2) Standard Eurorack frame housing 3U 84HP (decisive for speaker enclosure depth)
+3) Eurorack power source (Low noise 15-35V source for Amps, 5V & 3V3 regulated source for MCU's and controllers)
