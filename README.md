@@ -8,36 +8,36 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 3) Design a soundbar including a standardised built-in space for replacable electronics : A Eurorack Soundbar as it were!
 
 # Furniture requirements
-1) Elegant & aesthetic, fitting ones living room.
-2) Providing table surface fitting Piano Keyboard + Soundbar.
-3) Sturdy enough to carry 50Kg=110lbs.
-4) Providing maximum leg space horizontally and vertically.
-5) Height-adjustable to some extent.
-6) Piano-black glossy paint finish.
+1.1) Elegant & aesthetic.
+1.2) Providing table surface fitting Piano Keyboard + Soundbar.
+1.3) Sturdy enough to carry 50Kg=110lbs.
+1.4) Providing maximum leg space horizontally and vertically.
+1.5) Height-adjustable to some extent.
+1.6) Piano-black glossy paint finish.
 
 <a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=40%></a>
 
 This sketch, for what it's worth, outlines all elements including the Piano; exact measures and additional features however will come later; they obviously depend on the keyboard one has purchased.
 
 # Speaker enclosure - passive part - requirements
-1) Perfectly fitting keyboard width, and height aligned with the top of the speaker grills.
-2) Best compromise between good bass production and small enclosure volume.
-3) Rich sound spectrum and spatial perception ideal for instrument sound reproduction.
-4) Optional built-in passive filter and accessble attenuators whenever necessary.
-5) Die-cast, anti-reflection and airleak-proof speaker enclosure.
-6) Vibration isolation between table & enclosure.
-7) Does not vibrate or glide off the table.
-8) Re-openable, allowing replacement of speakers provided with inside fixture.
-9) All speaker leads and filter leads come straight out of the pressure cabinet. (No electrical circuits inside)
-10) One common connector (male part) providing electrically separate access to all enclosed speakers and filters.
-11) Nicely fitting speaker cover frame wrapped in speaker cover fabric, with magnetic attachment
+2.1) Perfectly fitting keyboard width, and height aligned with the top of the speaker grills.
+2.2) Best compromise between good bass production and small enclosure volume.
+2.3) Rich sound spectrum and spatial perception ideal for instrument sound reproduction.
+2.4) Optional built-in passive filter and accessble attenuators whenever necessary.
+2.5) Die-cast, anti-reflection and airleak-proof speaker enclosure.
+2.6) Vibration isolation between table & enclosure.
+2.7) Does not vibrate or glide off the table.
+2.8) Re-openable, allowing replacement of speakers provided with inside fixture.
+2.9) All speaker leads and filter leads come straight out of the pressure cabinet. (No electrical circuits inside)
+2.10) One common connector (male part) providing electrically separate access to all enclosed speakers and filters.
+2.11) Nicely fitting speaker cover frame wrapped in speaker cover fabric, with magnetic attachment
 
 # Electronics enclosure - active part- requirements
-1) One common connector (female part, heading towards the amplifier) with configurable dispatching jumpers 
-2) Standard Eurorack frame housing 3U 84HP (decisive for speaker enclosure depth)
-3) Eurorack power source (Low noise 15-35V source for Amps, 5V & 3V3 regulated source for MCU's and controllers), optionally with a 1-button on/off and power-on sequence.
-4) A good compromise on the divide between Eurorack enclosure height (located between bottom plate and face plate) and speaker enclosure duct height (located under the Eurorack bottom plate).
-5) At least 3 essential modules
+3.1) One common connector (female part, heading towards the amplifier) with configurable dispatching jumpers 
+3.2) Standard Eurorack frame housing 3U 84HP (decisive for speaker enclosure depth)
+3.3) Eurorack power source (Low noise 15-35V source for Amps, 5V & 3V3 regulated source for MCU's and controllers), optionally with a 1-button on/off and power-on sequence.
+3.4) A good compromise on the divide between Eurorack enclosure height (located between bottom plate and face plate) and speaker enclosure duct height (located under the Eurorack bottom plate).
+3.5) At least 3 essential modules
    - Amp (2 x 30-80W)
    - Piano connector face plate (USB-midi, MIDI-in/out)
    - Synth module (MIDI-in to audio)
