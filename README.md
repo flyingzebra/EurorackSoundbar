@@ -4,8 +4,8 @@ Goal: A table with fitting speaker & synth electronics for a MIDI keyboard.
 <a href="https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Clavinova CLP 153S.png"><img src="/illustrations/Clavinova CLP 153S.png?raw=true" width=40% align=left block></a>
 
 # Background story
-It all started with buying an all-in-one furnished hammer-action piano with built-in synth, and ended up regretting 25 years later all the electronics inside have become old and boring.  That said, I thought, while mechanics, furniture and sensor technology - to some extent - usually come with a built quality to withstand decades of keyboard playing, electronics inside are fashion-sensitive; their lifetime depend on trends, standards, genres, and innovations.  I long thought about flining out the guts out of my good old digital Yamaha Clavinova built around a YMW258-F synth chip from 1991, but then came a better idea: 
-* Buy a multi-sensor MIDI hammer-action keyboard (everyone knows how to do that; I fell for a KAWAI VPC1.
+It all started with buying an all-in-one furnished hammer-action piano with built-in synth, and ended up 25 years later getting stuck with old electronics and slow MIDI.  That said, I thought, while mechanics, furniture and sensor technology - to some extent - usually come with a built quality withstanding decades of playing, electronics inside turned out to be fashion-sensitive; their lifetime rather depend on trends, standards, genres, and innovations.  I long thought about flining out the guts out of my good old digital Yamaha Clavinova built around a synth chip from 1991 (YMW258-F), but selling my old piano in its original state and figure out a more future-proof enclosure sounded like a better idea: 
+* Buying a multi-sensor MIDI hammer-action keyboard (everyone knows how to do that; I fell for a KAWAI VPC1.
 * Design a slim, good-looking table on wheels carrying about 30Kg=66lbs of keyboard and another 20Kg=44lbs of soundbar.
 * Design a soundbar including a standardised built-in space for replacable electronics : **A Eurorack Soundbar as it were!**
 
