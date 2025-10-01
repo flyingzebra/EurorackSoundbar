@@ -44,4 +44,4 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 
 # Getting sketchy with it
 <a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=40% align=left block></a>
-This initial sketch, for what it's worth, outlines all elements including the Piano; we'll come back later on the exact measures and additional features; they obviously depend on the keyboard one has purchased.
+This is the initial sketch, for what it's worth, outlining all elements including the Piano; we'll come back later on the exact measures and additional features; obviously depending on the MIDI keyboard outer dimensions one has purchased.
