@@ -4,7 +4,7 @@ Goal: A table with fitting speaker & synth electronics for a MIDI keyboard.
 <a href="https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Clavinova CLP 153S.png"><img src="/illustrations/Clavinova CLP 153S.png?raw=true" width=40% align=left block></a>
 
 # Background story
-It all started with buying an all-in-one furnished hammer-action piano with built-in synth and speakers, but, 25 years regretting the old synth and terribly slow MIDI.  That said, while build quality on all parts of the piano gracefull survived decades of playing, electronics inside turned out to be fashion-sensitive.  I long thought about flinging out the guts out of my good old Clavinova from Yamaha built around a synth chip from 1991 (YMW258-F), but selling my old piano in its original state and figure out a more future-proof enclosure sounded like a better idea, as I really wanted an enclosure allowing more flexibility and finally speakers directing upwards: 
+It all started with buying an all-in-one furnished hammer-action piano with built-in synth and speakers, but, 25 years regretting the old synth and terribly slow MIDI.  That said, while build quality on all parts of the piano gracefull survived decades of playing, electronics inside turned out to be fashion-sensitive.  I long thought about flinging out the guts out of my good old Clavinova from Yamaha built around a synth chip from 1991 (YMW258-F), but selling my old piano in its original state and figure out a more future-proof enclosure sounded like a better idea, as I really wanted an enclosure allowing more flexibility: 
 * Buying a multi-sensor MIDI hammer-action keyboard (everyone knows how to do that; I fell for a KAWAI VPC1, but any brand or type of table-top keyboard will do just fine.
 * Design a slim, good-looking table on wheels carrying about 30Kg=66lbs of keyboard and another 20Kg=44lbs of soundbar.
 * Design a soundbar including a standardised built-in space for replacable electronics : **A Eurorack Soundbar as it were!**
@@ -30,17 +30,24 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 2.9) All speaker leads and filter leads come straight out of the pressure cabinet. (No electrical circuits inside)<br>
 2.10) One common connector (male part) providing electrically separate access to all enclosed speakers and filters.<br>
 2.11) Nicely fitting speaker cover frame wrapped in speaker cover fabric, with magnetic attachment<br>
+2.12) Speakers pointing upwards, providing a fairly unobstructed sound path<br>
 
 ## Electronics enclosure - active part
 3.1) One common connector (female part, heading towards the amplifier) with configurable dispatching jumpers.<br>
 3.2) Standard Eurorack frame housing 3U 84HP (decisive for speaker enclosure depth).<br>
 3.3) Eurorack power source (Low noise 15-35V source for Amps, 5V & 3V3 regulated source for MCU's and controllers), optionally with a 1-button on/off and power-on sequence.<br>
 3.4) A good compromise on the divide between Eurorack enclosure height (located between bottom plate and face plate) and speaker enclosure duct height (located under the Eurorack bottom plate).<br>
-3.5) At least 3 essential modules<br>
+3.6) Mains inlet connector with fast fuse and manual switch.<br>
+3.5) At least 3 essential Eurorack modules<br>
    - Amp (2 x 30-80W)
    - Piano connector face plate (USB-midi, MIDI-in/out)
    - Synth module (MIDI-in to audio)
-3.6) mains inlet connector with fast fuse and manual switch<br>
+3.6) Optional Eurorack modules - just brainstorming<br>
+   - Battery module providing mobile power
+   - Additional experimental synths (without patch cable clutter)
+   - MIDI merger/splitter module
+   - MIDI controller module (encoders, buttons, sliders, tone wheels, LEDs, touchscreens...)
+   - MIDI sequencer / tempo
 
 # Getting sketchy with it
 <a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/sketch.jpg><img src="/illustrations/sketch.jpg?raw=true" width=40% align=left block></a>
