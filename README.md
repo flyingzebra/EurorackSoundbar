@@ -13,5 +13,5 @@ It all started with buying an all-in-one furnished hammer action piano with buil
 4) Providing maximum leg space horizontally and vertically
 5) Height-adjustable to some extent
 
-Initial sketch
+My first sketch, for what it's worth drafting the outlines of all the elements including the Piano.
 <img src="/photos/sketch.jpg?raw=true" width=30% align="left"/>
