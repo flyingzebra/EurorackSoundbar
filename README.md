@@ -12,3 +12,6 @@ It all started with buying an all-in-one furnished hammer action piano with buil
 2) Sturdy enough to carry 50Kg=110lbs
 4) Providing maximum leg space horizontally and vertically
 5) Height-adjustable to some extent
+
+Initial sketch
+<img src="/photos/sketch.jpg?raw=true" width=30% align="left"/>
