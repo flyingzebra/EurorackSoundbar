@@ -3,7 +3,7 @@ Goal: A table with fitting speaker & synth electronics for a MIDI keyboard.
 
 <a href="https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Clavinova CLP 153S.png"><img src="/illustrations/Clavinova CLP 153S.png?raw=true" width=40% align=left block></a>
 
-# Background story
+# Piano enclosures deserve a better design
 It all started with buying an all-in-one furnished hammer-action piano with built-in synth and speakers, but, 25 years regretting the old synth and terribly slow MIDI.  That said, while build quality on all parts of the piano gracefull survived decades of playing, electronics inside turned out to be fashion-sensitive. As a matter of fact, furniture built-in synths sooner or later all become **OBSOLETE**. I long thought about flinging out the guts out of my good old Clavinova from Yamaha built around a synth chip from 1991 (YMW258-F), but selling my old piano in its original state and figure out a more future-proof enclosure sounded like a better idea, as I really wanted an enclosure allowing more flexibility: 
 * Buying a multi-sensor MIDI hammer-action keyboard (everyone knows how to do that; I fell for a KAWAI VPC1, but any brand or type of table-top keyboard will do just fine.
 * Design a slim, good-looking table on wheels carrying about 30Kg=66lbs of keyboard and another 20Kg=44lbs of soundbar.
