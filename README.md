@@ -5,7 +5,7 @@ Goal: A table with fitting speaker & synth electronics for a MIDI keyboard.
 
 # Piano enclosures deserve better design
 It all started with buying an all-in-one furnished hammer-action piano with built-in synth and speakers, but ending 25 years later with a shell containing a terribly old synth and procrastinating MIDI interface.  That said, while build quality on all parts of the piano gracefull survived decades of playing, electronics inside turned out to be fashion-sensitive. As a matter of fact, furniture built-in synths sooner or later all become **OBSOLETE**. I long thought about flinging out the guts out of my good old Clavinova from Yamaha built around a synth chip from 1991 (YMW258-F), but selling my old piano in its original state and figure out a more future-proof enclosure sounded like a better idea, as I really wanted an enclosure allowing more flexibility.  So, here's the plan: 
-* Buy a decent multi-sensor MIDI hammer-action keyboard (everyone knows how to do that; I fell for a KAWAI VPC1, but any model will do.
+* Buy a multi-sensor MIDI keyboard - I fell for a KAWAI VPC1, but any model will do.
 * Design a slim, good-looking table on wheels carrying about 30Kg=66lbs of keyboard and another 20Kg=44lbs of soundbar.
 * Design a soundbar including a standardised built-in rack space for replacable electronics : **A Eurorack Soundbar as it were!**
 
