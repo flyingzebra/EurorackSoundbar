@@ -59,3 +59,5 @@ This is the initial sketch, for what it's worth, outlining all elements includin
 
 This is your first step, planning how this soundbar will fit best fit behind your MIDI keyboard, the outer dimensions of the table, how your knees will ideally fit under that table, and many other practical considerations.
 
+<a href="https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Clavinova CLP 153S.png"><img src="/illustrations/ergonomy.png?raw=true" width=40% align=right block></a>
+
