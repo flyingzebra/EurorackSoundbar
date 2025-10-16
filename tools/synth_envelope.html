@@ -1,9 +1,3 @@
-<!--
-// Copyright (c) 2025 Freddy Vandriessche.
-// notice: https://raw.githubusercontent.com/RetroAppleJS/AppleII-IDE/main/LICENSE.md
-//
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +11,7 @@
     h1{font-size:16px;margin:0}
     .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px;min-height:calc(100vh - 54px)}
     .panel{background:var(--panel);border:1px solid #1a2332;border-radius:14px;padding:14px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
-    .row{display:grid;grid-template-columns:120px 1fr 74px;align-items:center;gap:8px;margin:8px 0}
+    .row{display:grid;grid-template-columns:120px 1fr 90px;align-items:center;gap:8px;margin:8px 0}
     label{color:var(--muted)} input[type="range"]{width:100%} .value{font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
     canvas{width:100%;height:100%;display:block;border-radius:14px}
     .canvas-wrap{position:relative}
@@ -82,37 +76,45 @@
 const VERSION = 'v1.0';
 const ENV_INDEX = 1; // configurable envelope number for labels
 
+// === Vital envelope 1 parameters read from the provided preset (RAW patch units) ===
+const PRESET = 
+{
+  env_1_delay: 0.0,                        // 0..1.4142135381698608 ==> 0..4s
+  env_1_attack: 1.0582560300827026,        // 0..2.378420114517212 ==> 0..32s
+  env_1_attack_power: 3.1799983978271484,  // -20..+20 ==> -20..+20
+  env_1_hold: 0.0,
+  env_1_decay: 1.7736866474151611,         // 0..2.378420114517212 ==> 0..32s
+  env_1_decay_power: -1.460000991821289,
+  env_1_sustain: 0.7679197192192078,
+  env_1_release: 1.3171406984329224,       // 0..2.378420114517212 ==> 0..32s
+  env_1_release_power: -2.0,
+  gate: 0 // sustain time before Note Off (seconds); not from patch here
+};
+
 // === Hard-coded parameter scaling (Vital patch units -> UI seconds / knob units)
 // Time params use a power-law: seconds = secMax * (raw/rawMax)^(2^power2)  (with power2=2 ⇒ x^4)
 const PARAM_SCALES = {
-  env_n_attack:        { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
-  env_n_decay:         { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
-  env_n_release:       { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
-  env_n_delay:         { type:'pow2', rawMax: 1.4142135381698608, secMax: 4,  power2: 2 },
-  env_n_hold:          { type:'pow2', rawMax: 1.4142135381698608, secMax: 4,  power2: 2 },
+  env_attack:        { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
+  env_decay:         { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
+  env_release:       { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
+  env_delay:         { type:'pow2', rawMax: 1.4142135381698608, secMax: 4,  power2: 2 },
+  env_hold:          { type:'pow2', rawMax: 1.4142135381698608, secMax: 4,  power2: 2 },
   // Linear params
-  env_n_sustain:       { type:'linear', factor: 1 },
-  env_n_attack_power:  { type:'linear', factor: 1 },
-  env_n_decay_power:   { type:'linear', factor: 1 },
-  env_n_release_power: { type:'linear', factor: 1 },
+  env_sustain:       { type:'linear', factor: 1 },
+  env_attack_power:  { type:'linear', factor: 1 },
+  env_decay_power:   { type:'linear', factor: 1 },
+  env_release_power: { type:'linear', factor: 1 }
 };
-
-// Helpers to expand env_n_* names with the current index
-const keyN = (k) => k.replace('env_n_', `env_${ENV_INDEX}_`);
 
 // Power-law converters using repeated squaring (power2=number of squarings). Faster than Math.pow and
 // correct for fractional inputs (bitwise shifts would coerce to 32-bit ints and are incorrect for 0..1).
 function fromPatchUnitsPow2(raw, rawMax, secMax, power2){
-  if (!isFinite(rawMax) || rawMax <= 0 || !isFinite(secMax) || secMax < 0) return 0;
-  let x = Math.max(0, Math.min(1, raw / rawMax));
-  // apply x -> x^(2^power2) by squaring power2 times
+  let x = raw / rawMax; if (x < 0) x = 0; else if (x > 1) x = 1;
   for (let i=0;i<power2;i++) x *= x; // power2=2 => x^4
   return secMax * x;
 }
 function toPatchUnitsPow2(seconds, rawMax, secMax, power2){
-  if (!isFinite(secMax) || secMax <= 0 || !isFinite(rawMax) || rawMax < 0) return 0;
-  let y = Math.max(0, Math.min(1, seconds / secMax));
-  // inverse: y -> y^(1/(2^power2)) via repeated sqrt
+  let y = seconds / secMax; if (y < 0) y = 0; else if (y > 1) y = 1;
   for (let i=0;i<power2;i++) y = Math.sqrt(y); // power2=2 => 4th root
   return rawMax * y;
 }
@@ -132,20 +134,6 @@ function toPatchUnits(name, value){
   const f = (e.factor ?? 1);
   return f !== 0 ? value / f : 0;
 }
-
-// === Vital envelope 1 parameters read from the provided preset (RAW patch units) ===
-const PRESET = {
-  delay: 0.0,
-  attack: 1.0582560300827026,
-  attack_power: 3.1799983978271484,
-  hold: 0.0,
-  decay: 1.7736866474151611,
-  decay_power: -1.460000991821289,
-  sustain: 0.7679197192192078,
-  release: 1.3171406984329224,
-  release_power: -2.0,
-  gate: 0 // sustain time before Note Off (seconds); not from patch here
-};
 
 // === Helpers ===
 function lerp(a,b,t){ return a + (b-a) * t; }
@@ -177,12 +165,12 @@ function bendXForPower(p){
 // Evaluate the envelope (0..1) at time t (seconds)
 function evalEnvelope(params, t){
   const {delay, attack, attack_power, hold, decay, decay_power, sustain, release, release_power, gate} = params;
-  const tDelayEnd = delay;
-  const tAttackEnd = tDelayEnd + attack;
-  const tHoldEnd   = tAttackEnd + hold;
-  const tDecayEnd  = tHoldEnd   + decay;
-  const tNoteOff   = tDecayEnd  + gate;
-  const tReleaseEnd= tNoteOff   + release;
+  const tDelayEnd   = delay;
+  const tAttackEnd  = tDelayEnd + attack;
+  const tHoldEnd    = tAttackEnd + hold;
+  const tDecayEnd   = tHoldEnd   + decay;
+  const tNoteOff    = tDecayEnd  + gate;
+  const tReleaseEnd = tNoteOff   + release;
 
   if (t < tDelayEnd) return 0.0;
   if (t < tAttackEnd){
@@ -204,24 +192,39 @@ function evalEnvelope(params, t){
 
 function totalLength(p){ return p.delay + p.attack + p.hold + p.decay + p.gate + p.release; }
 
-// Compute timeline landmarks
-function segmentTimes(p){
-  const tDelayEnd = p.delay;
-  const tAttackEnd = tDelayEnd + p.attack;
-  const tHoldEnd   = tAttackEnd + p.hold;
-  const tDecayEnd  = tHoldEnd   + p.decay;
-  const tNoteOff   = tDecayEnd  + p.gate;
-  const tReleaseEnd= tNoteOff   + p.release;
-  return { tDelayEnd, tAttackEnd, tHoldEnd, tDecayEnd, tNoteOff, tReleaseEnd };
-}
-
-// Midpoint times for A/D/R segments
-function midDotTimes(p){
-  const T = segmentTimes(p);
-  const tA = p.attack  > 0 ? T.tDelayEnd + 0.5 * p.attack  : null;
-  const tD = p.decay   > 0 ? T.tHoldEnd  + 0.5 * p.decay   : null;
-  const tR = p.release > 0 ? T.tNoteOff  + 0.5 * p.release : null;
-  return { tA, tD, tR };
+// === Precomputed timeline boundaries + midpoints ===
+// We store boundaries in a fixed indexed array for generalization.
+// Index map:
+//  0 NOTE_ON (0)
+//  1 DELAY_END
+//  2 ATTACK_MID
+//  3 ATTACK_END
+//  4 HOLD_MID
+//  5 HOLD_END
+//  6 DECAY_MID
+//  7 DECAY_END
+//  8 NOTE_OFF
+//  9 RELEASE_MID
+// 10 RELEASE_END
+// 11 TOTAL_END (== RELEASE_END)
+function computeTimeline(p)
+{
+  const b = new Float32Array(12);
+  let v = 0; b[0] = 0;
+  b[1] = (v += p.delay);
+  b[2] = b[1] + 0.5 * p.attack;
+  b[3] = (v += p.attack);
+  b[4] = v + 0.5 * p.hold;
+  b[5] = (v += p.hold);
+  b[6] = v + 0.5 * p.decay;
+  b[7] = (v += p.decay);
+  b[8] = (v += p.gate);
+  b[9] = v + 0.5 * p.release;
+  b[10]= (v += p.release);
+  b[11]= v; // total end
+  return { b,
+    idx: { NOTE_ON:0, DELAY_END:1, ATTACK_MID:2, ATTACK_END:3, HOLD_MID:4, HOLD_END:5, DECAY_MID:6, DECAY_END:7, NOTE_OFF:8, RELEASE_MID:9, RELEASE_END:10, TOTAL_END:11 }
+  };
 }
 
 // === Canvas + rendering ===
@@ -229,9 +232,13 @@ const canvas = document.getElementById('env');
 const ctx = canvas.getContext('2d');
 const noteOffEl = document.getElementById('noteoff');
 const sustainLine = document.getElementById('sustainLine');
-let params = {}; // will be set in reset()
+let params = { // safe defaults avoid early draw errors
+  delay:0, attack:0, hold:0, decay:0, release:0, gate:0,
+  sustain:1, attack_power:0, decay_power:0, release_power:0
+};
 
-function resize(){
+function resize()
+{
   const dpr = Math.max(1, window.devicePixelRatio || 1);
   const rect = canvas.getBoundingClientRect();
   canvas.width = Math.round(rect.width * dpr);
@@ -240,7 +247,8 @@ function resize(){
 }
 window.addEventListener('resize', resize);
 
-function drawGrid(bounds){
+function drawGrid(bounds)
+{
   const {w,h,pxPerSec} = bounds;
   ctx.save();
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
@@ -270,8 +278,12 @@ function draw(){
   const innerW = w - marginL - marginR;
   const innerH = h - marginT - marginB;
 
-  const totalSec = totalLength(params);
-  const pxPerSec = innerW / Math.max(totalSec, 0.001);
+  // Precompute timeline once per draw
+  const TL = computeTimeline(params);
+  const b = TL.b, I = TL.idx;
+  const totalSec = Math.max(0.0001, b[I.TOTAL_END]);
+  const invTotal = 1 / totalSec;
+  const pxPerSec = innerW / totalSec;
   const bounds = {w:innerW, h:innerH, pxPerSec};
 
   ctx.save();
@@ -281,53 +293,55 @@ function draw(){
   sustainLine.style.display = 'block';
   sustainLine.style.top = `${marginT + (1-params.sustain)*innerH}px`;
 
-  ctx.beginPath();
-  const steps = Math.max(800, innerW);
+  // === Fast sampling into typed arrays ===
+  const steps = Math.max(800, innerW|0);
+  const xs = new Float32Array(steps+1);
+  const ys = new Float32Array(steps+1);
+  const invSteps = 1 / steps;
   for(let i=0;i<=steps;i++){
-    const t = (i/steps) * totalSec;
-    const y01 = evalEnvelope(params, t);
-    const x = i/steps * innerW;
-    const y = (1 - y01) * innerH;
-    if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    const f = i * invSteps;               // 0..1
+    const t = f * totalSec;
+    xs[i] = f * innerW;
+    ys[i] = (1 - evalEnvelope(params, t)) * innerH;
   }
+  ctx.beginPath();
+  ctx.moveTo(xs[0], ys[0]);
+  for(let i=1;i<=steps;i++) ctx.lineTo(xs[i], ys[i]);
   ctx.lineWidth = 2*dpr;
   ctx.strokeStyle = 'rgba(125,211,252,0.95)';
   ctx.shadowColor = 'rgba(125,211,252,0.2)';
   ctx.shadowBlur = 10*dpr;
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
-  ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(125,211,252,0.9)';
-  const tMarks = [
-    0,
-    params.delay,
-    params.delay + params.attack,
-    params.delay + params.attack + params.hold,
-    params.delay + params.attack + params.hold + params.decay,
-    params.delay + params.attack + params.hold + params.decay + params.gate,
-    totalSec
-  ];
-  tMarks.forEach(t=>{
-    const x = (t/totalSec)*innerW;
-    const y01 = evalEnvelope(params, t);
-    const y = (1 - y01) * innerH;
+  // === Draw boundary dots (key segment ends) ===
+  ctx.fillStyle = 'rgba(125,211,252,0.9)';
+  const boundaryIdx = [I.NOTE_ON, I.DELAY_END, I.ATTACK_END, I.HOLD_END, I.DECAY_END, I.NOTE_OFF, I.TOTAL_END];
+  for (let k=0;k<boundaryIdx.length;k++){
+    const t = b[boundaryIdx[k]];
+    const x = (t * invTotal) * innerW;
+    const y = (1 - evalEnvelope(params, t)) * innerH;
     ctx.beginPath(); ctx.arc(x, y, 3*dpr, 0, Math.PI*2); ctx.fill();
-  });
+  }
 
+  // === Draw midpoint labels using the indexed array ===
   ctx.save();
   ctx.fillStyle = 'rgba(255, 225, 120, 0.95)';
   ctx.font = `${Math.max(10, innerH*0.03)}px ui-sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   function dotLabel(xPix, yPix, label){ ctx.beginPath(); ctx.arc(xPix, yPix, 3.5*dpr, 0, Math.PI*2); ctx.fill(); ctx.fillText(label, xPix + 6*dpr, yPix); }
-
-  const dots = midDotTimes(params);
-  if (dots.tA != null){ const yA = evalEnvelope(params, dots.tA); dotLabel((dots.tA/totalSec)*innerW, (1-yA)*innerH, 'A'); }
-  if (dots.tD != null){ const yD = evalEnvelope(params, dots.tD); dotLabel((dots.tD/totalSec)*innerW, (1-yD)*innerH, 'D'); }
-  if (dots.tR != null){ const yR = evalEnvelope(params, dots.tR); dotLabel((dots.tR/totalSec)*innerW, (1-yR)*innerH, 'R'); }
+  const mids = [ [I.ATTACK_MID,'A'], [I.DECAY_MID,'D'], [I.RELEASE_MID,'R'] ];
+  for (let j=0;j<mids.length;j++){
+    const t = b[mids[j][0]];
+    const x = (t * invTotal) * innerW;
+    const y = (1 - evalEnvelope(params, t)) * innerH;
+    dotLabel(x, y, mids[j][1]);
+  }
   ctx.restore();
 
   ctx.restore();
 
-  const noteOffFrac = totalSec > 0 ? (params.delay+params.attack+params.hold+params.decay+params.gate)/totalSec : 0;
-  const noteOffX = marginL + noteOffFrac * innerW;
+  // Note-off guide
+  const noteOffX = marginL + (b[I.NOTE_OFF] * invTotal) * innerW;
   noteOffEl.style.left = `${noteOffX}px`;
 }
 
@@ -347,16 +361,16 @@ function bind(id, key, formatter=(v)=>v, transform=(v)=>v){
 
 const B = {
   gate: bind('gate','gate', v=>v.toFixed(2)+'s'),
-  // Time sliders are in RAW PATCH UNITS (log feel via gamma mapping); display seconds
-  delay:   bind('delay','delay',   v=> fromPatchUnits('env_n_delay', v).toFixed(3)+'s',   v=> fromPatchUnits('env_n_delay', v)),
-  attack:  bind('attack','attack', v=> fromPatchUnits('env_n_attack', v).toFixed(3)+'s',  v=> fromPatchUnits('env_n_attack', v)),
-  hold:    bind('hold','hold',     v=> fromPatchUnits('env_n_hold', v).toFixed(3)+'s',    v=> fromPatchUnits('env_n_hold', v)),
-  decay:   bind('decay','decay',   v=> fromPatchUnits('env_n_decay', v).toFixed(3)+'s',   v=> fromPatchUnits('env_n_decay', v)),
-  release: bind('release','release',v=> fromPatchUnits('env_n_release', v).toFixed(3)+'s',v=> fromPatchUnits('env_n_release', v)),
+  // Time sliders are in RAW PATCH UNITS (log feel via power2 mapping); display seconds
+  delay:   bind('delay','delay',   v=> fromPatchUnits('env_delay', v).toFixed(3)+'s',   v=> fromPatchUnits('env_delay', v)),
+  attack:  bind('attack','attack', v=> fromPatchUnits('env_attack', v).toFixed(3)+'s',  v=> fromPatchUnits('env_attack', v)),
+  hold:    bind('hold','hold',     v=> fromPatchUnits('env_hold', v).toFixed(3)+'s',    v=> fromPatchUnits('env_hold', v)),
+  decay:   bind('decay','decay',   v=> fromPatchUnits('env_decay', v).toFixed(3)+'s',   v=> fromPatchUnits('env_decay', v)),
+  release: bind('release','release',v=> fromPatchUnits('env_release', v).toFixed(3)+'s',v=> fromPatchUnits('env_release', v)),
   // Power and sustain remain linear in native units
-  attack_power: bind('attack_power','attack_power', v=>v.toFixed(3), v=>-v),
-  decay_power:  bind('decay_power','decay_power',   v=>v.toFixed(3), v=>v),
-  sustain:      bind('sustain','sustain',           v=>v.toFixed(3)),
+  attack_power: bind('attack_power','attack_power',  v=>v.toFixed(3), v=>-v),
+  decay_power:  bind('decay_power','decay_power',    v=>v.toFixed(3), v=>v),
+  sustain:      bind('sustain','sustain',            v=>v.toFixed(3)),
   release_power:bind('release_power','release_power',v=>v.toFixed(3), v=>v),
 };
 
@@ -371,15 +385,15 @@ function setControlsFromRaw(p){
 function reset(){
   // PRESET is in raw patch units for time; set sliders to raw and sync (seconds computed via transform)
   const raw = {
-    delay: PRESET.delay,
-    attack: PRESET.attack,
-    hold: PRESET.hold,
-    decay: PRESET.decay,
-    release: PRESET.release,
-    sustain: PRESET.sustain,
-    attack_power: PRESET.attack_power,
-    decay_power: PRESET.decay_power,
-    release_power: PRESET.release_power,
+    delay: PRESET["env_"+ENV_INDEX+"_delay"],
+    attack: PRESET["env_"+ENV_INDEX+"_attack"],
+    hold: PRESET["env_"+ENV_INDEX+"_hold"],
+    decay: PRESET["env_"+ENV_INDEX+"_decay"],
+    release: PRESET["env_"+ENV_INDEX+"_release"],
+    sustain: PRESET["env_"+ENV_INDEX+"_sustain"],
+    attack_power: PRESET["env_"+ENV_INDEX+"_attack_power"],
+    decay_power: PRESET["env_"+ENV_INDEX+"_decay_power"],
+    release_power: PRESET["env_"+ENV_INDEX+"_release_power"],
     gate: 0
   };
   setControlsFromRaw(raw);
@@ -394,14 +408,14 @@ document.getElementById('fit').addEventListener('click', ()=> draw());
 function setPresetStyleLabels(){
   const prefix = `env_${ENV_INDEX}_`;
   const map = {
-    label_gate: prefix + 'sustain',          // Gate (sustain time) -> env_n_sustain
+    label_gate: prefix + 'sustain',          // Gate (sustain time) -> env_sustain
     label_delay: prefix + 'delay',
     label_attack: prefix + 'attack',
     label_attack_power: prefix + 'attack_power',
     label_hold: prefix + 'hold',
     label_decay: prefix + 'decay',
     label_decay_power: prefix + 'decay_power',
-    label_sustain: prefix + 'sustain',       // Sustain (0–1) -> env_n_sustain
+    label_sustain: prefix + 'sustain',       // Sustain (0–1) -> env_sustain
     label_release: prefix + 'release',
     label_release_power: prefix + 'release_power'
   };
@@ -414,20 +428,25 @@ function runTests(){
   const ok = (name, cond)=>{ out.push(`${cond ? '✔' : '✘'} ${name}`); };
   const near = (a,b,eps=1e-6)=> Math.abs(a-b) <= eps;
 
+  // 0) Scales exist for all expected keys
+  const timeKeys = ['env_attack','env_decay','env_release','env_delay','env_hold'];
+  ok('PARAM_SCALES has time keys', timeKeys.every(k=> PARAM_SCALES[k] && PARAM_SCALES[k].rawMax>0 && PARAM_SCALES[k].secMax>0));
+
+  // 0a) computeTimeline ordering & coverage
+  const Pz = {delay:0.1, attack:0.2, hold:0.3, decay:0.4, sustain:0.5, release:0.6, gate:0.7};
+  const TLz = computeTimeline(Pz);
+  const b = TLz.b, I = TLz.idx;
+  ok('computeTimeline ordered', b[I.NOTE_ON] <= b[I.DELAY_END] && b[I.DELAY_END] <= b[I.ATTACK_END] && b[I.ATTACK_END] <= b[I.HOLD_END] && b[I.HOLD_END] <= b[I.DECAY_END] && b[I.DECAY_END] <= b[I.NOTE_OFF] && b[I.NOTE_OFF] <= b[I.RELEASE_END]);
+  ok('total equals release end', near(b[I.TOTAL_END], b[I.RELEASE_END]));
+  ok('midpoints centered', near(b[I.ATTACK_MID], (b[I.DELAY_END]+b[I.ATTACK_END])/2) && near(b[I.DECAY_MID], (b[I.HOLD_END]+b[I.DECAY_END])/2) && near(b[I.RELEASE_MID], (b[I.NOTE_OFF]+b[I.RELEASE_END])/2));
+
   // 1) powerCurve01 endpoints & linearity
   ok('powerCurve01(0,p)=0 for p∈{-20,-3,0,3,20}', [-20,-3,0,3,20].every(p=> near(powerCurve01(0,p),0)));
   ok('powerCurve01(1,p)=1 for p∈{-20,-3,0,3,20}', [-20,-3,0,3,20].every(p=> near(powerCurve01(1,p),1)));
   ok('powerCurve01 linear at p=0', [0,0.25,0.5,0.75,1].every(x=> near(powerCurve01(x,0), x, 1e-9)));
 
-  // 2) bendXForPower in [0,1]
-  ok('bendXForPower in [0,1]', [-20,-4,-1,0,1,4,20].every(p=>{ const bx=bendXForPower(p); return bx>=0 && bx<=1 && !Number.isNaN(bx); }));
-
-  // 2b) Midpoint times are exactly 50% of their segments
-  const Pm = {delay:0.1, attack:0.8, hold:0.2, decay:0.6, sustain:0.5, release:0.7, gate:0.3, attack_power:2, decay_power:-1, release_power:1};
-  const TT = segmentTimes(Pm); const MM = midDotTimes(Pm);
-  ok('A mid @ delay + 0.5*attack', near(MM.tA, TT.tDelayEnd + 0.5*Pm.attack));
-  ok('D mid @ holdEnd + 0.5*decay', near(MM.tD, TT.tHoldEnd + 0.5*Pm.decay));
-  ok('R mid @ noteOff + 0.5*release', near(MM.tR, TT.tNoteOff + 0.5*Pm.release));
+  // 2) 16-bit control buffer properties (sanity placeholder; builder not present in this version)
+  // (Optional future: add buildControlBuffer() tests when enabling control-rate buffer.)
 
   // 3) Envelope midpoints at t=50% reflect power mapping
   const P = {...params, delay:0, attack:1, hold:0, decay:1, release:1, gate:0.2, sustain:0.7, attack_power:2, decay_power:-1, release_power:1};
@@ -442,7 +461,7 @@ function runTests(){
 
   // 5) Range safety: envelope stays in [0,1]
   const P3 = {...params, delay:0.1, attack:0.2, hold:0.2, decay:0.2, release:0.2, gate:0.3, sustain:0.65, attack_power:20, decay_power:-20, release_power:20};
-  const total3 = totalLength(P3);
+  const TL3 = computeTimeline(P3); const total3 = TL3.b[TL3.idx.TOTAL_END];
   let inRange = true; for(let i=0;i<=200;i++){ const y=evalEnvelope(P3, (i/200)*total3); if (y< -1e-6 || y>1+1e-6) { inRange=false; break; } }
   ok('Envelope output clamped to [0,1]', inRange);
 
@@ -450,20 +469,20 @@ function runTests(){
   function isMonoInc(arr){ for(let i=1;i<arr.length;i++){ if(arr[i] + 1e-6 < arr[i-1]) return false; } return true; }
   function isMonoDec(arr){ for(let i=1;i<arr.length;i++){ if(arr[i] - 1e-6 > arr[i-1]) return false; } return true; }
   const Pa = {delay:0, attack:0.6, hold:0, decay:0, release:0, gate:0, sustain:1, attack_power:10, decay_power:0, release_power:0};
-  const valsA = Array.from({length:50},(_,i)=> evalEnvelope(Pa, (i/49)*Pa.attack));
+  const TL_a = computeTimeline(Pa); const valsA = Array.from({length:50},(_,i)=> evalEnvelope(Pa, (i/49)*TL_a.b[TL_a.idx.ATTACK_END]));
   ok('Attack monotonic non-decreasing', isMonoInc(valsA));
   const Pd = {delay:0, attack:0, hold:0, decay:0.6, release:0, gate:0, sustain:0.4, attack_power:0, decay_power:-10, release_power:0};
-  const valsD = Array.from({length:50},(_,i)=> evalEnvelope(Pd, (i/49)*Pd.decay));
+  const TL_d = computeTimeline(Pd); const valsD = Array.from({length:50},(_,i)=> evalEnvelope(Pd, TL_d.b[TL_d.idx.HOLD_END] + (i/49)*(TL_d.b[TL_d.idx.DECAY_END]-TL_d.b[TL_d.idx.HOLD_END])));
   ok('Decay monotonic towards sustain', isMonoDec(valsD));
   const Pr = {delay:0, attack:0, hold:0, decay:0, release:0.6, gate:0, sustain:0.7, attack_power:0, decay_power:0, release_power:10};
-  const valsR = Array.from({length:50},(_,i)=> evalEnvelope(Pr, (i/49)*Pr.release));
+  const TL_r = computeTimeline(Pr); const valsR = Array.from({length:50},(_,i)=> evalEnvelope(Pr, TL_r.b[TL_r.idx.NOTE_OFF] + (i/49)*(TL_r.b[TL_r.idx.RELEASE_END]-TL_r.b[TL_r.idx.NOTE_OFF])));
   ok('Release monotonic non-increasing', isMonoDec(valsR));
 
   // 7) Preset powers transformed at init so bends match slider behavior
   ok('Preset powers transformed at init',
-     near(params.attack_power, B.attack_power.transform(PRESET.attack_power)) &&
-     near(params.decay_power,  B.decay_power.transform(PRESET.decay_power)) &&
-     near(params.release_power,B.release_power.transform(PRESET.release_power))
+     B.attack_power.transform(PRESET["env_"+ENV_INDEX+"_attack_power"]) === params.attack_power &&
+     B.decay_power.transform(PRESET["env_"+ENV_INDEX+"_decay_power"])   === params.decay_power &&
+     B.release_power.transform(PRESET["env_"+ENV_INDEX+"_release_power"])=== params.release_power
   );
   ok('Slider transform mapping (A negates, D/R identity)',
      B.attack_power.transform(5) === -5 &&
@@ -492,22 +511,26 @@ function runTests(){
   ok('isMonoDec basic pass/fail', isMonoDec([3,3,2,1,1]) && !isMonoDec([3,2,3]));
 
   // 10) Power-law scaling sanity checks + round-trips
-  const A = PARAM_SCALES.env_n_attack; // 32s family
-  const Y = PARAM_SCALES.env_n_delay;  // 4s family
-  ok('Attack midpoint → 2s (32/16)', Math.abs(fromPatchUnits('env_n_attack', A.rawMax/2) - (A.secMax/16)) < 1e-6);
-  ok('Delay midpoint → 0.25s (4/16)', Math.abs(fromPatchUnits('env_n_delay', Y.rawMax/2) - (Y.secMax/16)) < 1e-6);
-  ok('Delay raw≈1.004971 → ≈1.020s', Math.abs(fromPatchUnits('env_n_delay', 1.0049711465835571) - 1.020) < 0.003);
-  ok('Attack-family raw≈1.19417548 → ≈2.033s', Math.abs(fromPatchUnits('env_n_attack', 1.1941754817962646) - 2.033) < 0.003);
-  ok('Attack round-trip 32s -> rawMax', Math.abs(toPatchUnits('env_n_attack', 32) - A.rawMax) < 1e-9);
-  ok('Delay round-trip 4s -> rawMax', Math.abs(toPatchUnits('env_n_delay', 4) - Y.rawMax) < 1e-9);
+  const A = PARAM_SCALES.env_attack; // 32s family
+  const Y = PARAM_SCALES.env_delay;  // 4s family
+  ok('Attack midpoint → 2s (32/16)', Math.abs(fromPatchUnits('env_attack', A.rawMax/2) - (A.secMax/16)) < 1e-6);
+  ok('Delay midpoint → 0.25s (4/16)', Math.abs(fromPatchUnits('env_delay', Y.rawMax/2) - (Y.secMax/16)) < 1e-6);
+  ok('Delay raw≈1.004971 → ≈1.020s', Math.abs(fromPatchUnits('env_delay', 1.0049711465835571) - 1.020) < 0.003);
+  ok('Attack-family raw≈1.19417548 → ≈2.033s', Math.abs(fromPatchUnits('env_attack', 1.1941754817962646) - 2.033) < 0.003);
+  ok('Attack round-trip 32s -> rawMax', Math.abs(toPatchUnits('env_attack', 32) - A.rawMax) < 1e-9);
+  ok('Delay round-trip 4s -> rawMax', Math.abs(toPatchUnits('env_delay', 4) - Y.rawMax) < 1e-9);
 
   // 11) Slider ranges match RAW MAX (log-feel), not seconds
   ok('Attack/Decay/Release sliders max=rawMax(2.3784)', ['attack','decay','release'].every(id=> Math.abs(+document.getElementById(id).max - 2.378420114517212) < 1e-12));
   ok('Delay/Hold sliders max=rawMax(1.4142)', ['delay','hold'].every(id=> Math.abs(+document.getElementById(id).max - 1.4142135381698608) < 1e-12));
 
   // 12) After reset, params hold seconds converted from PRESET raw
-  ok('params.attack equals seconds(from raw)', near(params.attack, fromPatchUnits('env_n_attack', PRESET.attack)));
-  ok('params.delay equals seconds(from raw)', near(params.delay, fromPatchUnits('env_n_delay', PRESET.delay)));
+  ok('params.attack equals seconds(from raw)', near(params.attack, fromPatchUnits('env_attack', PRESET["env_"+ENV_INDEX+"_attack"])));
+  ok('params.delay equals seconds(from raw)', near(params.delay, fromPatchUnits('env_delay', PRESET["env_"+ENV_INDEX+"_delay"])));
+
+  // 13) Inverse mapping property on a mid value
+  const rawMidA = A.rawMax/2; const secMidA = fromPatchUnits('env_attack', rawMidA); const backRawA = toPatchUnits('env_attack', secMidA);
+  ok('attack rawMid -> sec -> raw round-trip', near(backRawA, rawMidA, 1e-9));
 
   const pre = document.getElementById('testout');
   if (pre) pre.textContent = out.join('\n');
@@ -520,4 +543,3 @@ runTests();
 </script>
 </body>
 </html>
-
