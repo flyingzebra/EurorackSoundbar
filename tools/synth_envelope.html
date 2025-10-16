@@ -76,6 +76,12 @@
 const VERSION = 'v1.0';
 const ENV_INDEX = 1; // configurable envelope number for labels
 
+// 16-bit time domain for all time outcomes (no control buffer)
+const MAX_ENVELOPE_SECONDS = 120;          // Hard cap for our envelope timeline
+const U16_MAX = 65535;                      // 0..65535 ticks cover MAX_ENVELOPE_SECONDS
+const SEC_PER_TICK = MAX_ENVELOPE_SECONDS / U16_MAX;
+const TICKS_PER_SEC = U16_MAX / MAX_ENVELOPE_SECONDS;
+
 // === Vital envelope 1 parameters read from the provided preset (RAW patch units) ===
 const PRESET = 
 {
@@ -192,8 +198,21 @@ function evalEnvelope(params, t){
 
 function totalLength(p){ return p.delay + p.attack + p.hold + p.decay + p.gate + p.release; }
 
-// === Precomputed timeline boundaries + midpoints ===
-// We store boundaries in a fixed indexed array for generalization.
+
+function secToTicks(s){ if (!Number.isFinite(s) || s <= 0) return 0; const t = Math.round(s * TICKS_PER_SEC); return t < 0 ? 0 : (t > U16_MAX ? U16_MAX : t); }
+function ticksToSec(t){ return t * SEC_PER_TICK; }
+
+function F2I(_float)
+{
+    return 1024 * (_float + 20)
+}
+
+function I2F(_uint32)
+{
+    return (_uint32/1024) -20;
+}
+  
+// Build timeline boundaries in 16-bit ticks (integers). Midpoints are exact mid-ticks.
 // Index map:
 //  0 NOTE_ON (0)
 //  1 DELAY_END
@@ -207,21 +226,24 @@ function totalLength(p){ return p.delay + p.attack + p.hold + p.decay + p.gate +
 //  9 RELEASE_MID
 // 10 RELEASE_END
 // 11 TOTAL_END (== RELEASE_END)
-function computeTimeline(p)
-{
-  const b = new Float32Array(12);
-  let v = 0; b[0] = 0;
-  b[1] = (v += p.delay);
-  b[2] = b[1] + 0.5 * p.attack;
-  b[3] = (v += p.attack);
-  b[4] = v + 0.5 * p.hold;
-  b[5] = (v += p.hold);
-  b[6] = v + 0.5 * p.decay;
-  b[7] = (v += p.decay);
-  b[8] = (v += p.gate);
-  b[9] = v + 0.5 * p.release;
-  b[10]= (v += p.release);
-  b[11]= v; // total end
+function computeTimeline(p){
+  const b = new Uint16Array(12);
+  b[0] = 0;
+  let vSec = 0;
+  // Delay
+  vSec += p.delay; b[1] = secToTicks(vSec);
+  // Attack
+  const aStart = b[1]; vSec += p.attack; const aEnd = secToTicks(vSec); b[2] = (aStart + aEnd) >>> 1; b[3] = aEnd;
+  // Hold
+  const hStart = b[3]; vSec += p.hold;   const hEnd = secToTicks(vSec); b[4] = (hStart + hEnd) >>> 1; b[5] = hEnd;
+  // Decay
+  const dStart = b[5]; vSec += p.decay;  const dEnd = secToTicks(vSec); b[6] = (dStart + dEnd) >>> 1; b[7] = dEnd;
+  // Gate (note on to off)
+  vSec += p.gate; b[8] = secToTicks(vSec);
+  // Release
+  const rStart = b[8]; vSec += p.release; const rEnd = secToTicks(vSec); b[9] = (rStart + rEnd) >>> 1; b[10] = rEnd;
+  // Total end (same as release end)
+  b[11] = b[10];
   return { b,
     idx: { NOTE_ON:0, DELAY_END:1, ATTACK_MID:2, ATTACK_END:3, HOLD_MID:4, HOLD_END:5, DECAY_MID:6, DECAY_END:7, NOTE_OFF:8, RELEASE_MID:9, RELEASE_END:10, TOTAL_END:11 }
   };
@@ -236,6 +258,7 @@ let params = { // safe defaults avoid early draw errors
   delay:0, attack:0, hold:0, decay:0, release:0, gate:0,
   sustain:1, attack_power:0, decay_power:0, release_power:0
 };
+
 
 function resize()
 {
@@ -281,7 +304,7 @@ function draw(){
   // Precompute timeline once per draw
   const TL = computeTimeline(params);
   const b = TL.b, I = TL.idx;
-  const totalSec = Math.max(0.0001, b[I.TOTAL_END]);
+  const totalSec = Math.max(0.0001, ticksToSec(b[I.TOTAL_END]));
   const invTotal = 1 / totalSec;
   const pxPerSec = innerW / totalSec;
   const bounds = {w:innerW, h:innerH, pxPerSec};
@@ -293,14 +316,14 @@ function draw(){
   sustainLine.style.display = 'block';
   sustainLine.style.top = `${marginT + (1-params.sustain)*innerH}px`;
 
-  // === Fast sampling into typed arrays ===
+  // === Render by sampling, using 16-bit tick boundaries for time positions ===
   const steps = Math.max(800, innerW|0);
   const xs = new Float32Array(steps+1);
   const ys = new Float32Array(steps+1);
   const invSteps = 1 / steps;
   for(let i=0;i<=steps;i++){
     const f = i * invSteps;               // 0..1
-    const t = f * totalSec;
+    const t = f * totalSec;               // seconds
     xs[i] = f * innerW;
     ys[i] = (1 - evalEnvelope(params, t)) * innerH;
   }
@@ -318,7 +341,7 @@ function draw(){
   ctx.fillStyle = 'rgba(125,211,252,0.9)';
   const boundaryIdx = [I.NOTE_ON, I.DELAY_END, I.ATTACK_END, I.HOLD_END, I.DECAY_END, I.NOTE_OFF, I.TOTAL_END];
   for (let k=0;k<boundaryIdx.length;k++){
-    const t = b[boundaryIdx[k]];
+    const t = ticksToSec(b[boundaryIdx[k]]);
     const x = (t * invTotal) * innerW;
     const y = (1 - evalEnvelope(params, t)) * innerH;
     ctx.beginPath(); ctx.arc(x, y, 3*dpr, 0, Math.PI*2); ctx.fill();
@@ -331,7 +354,7 @@ function draw(){
   function dotLabel(xPix, yPix, label){ ctx.beginPath(); ctx.arc(xPix, yPix, 3.5*dpr, 0, Math.PI*2); ctx.fill(); ctx.fillText(label, xPix + 6*dpr, yPix); }
   const mids = [ [I.ATTACK_MID,'A'], [I.DECAY_MID,'D'], [I.RELEASE_MID,'R'] ];
   for (let j=0;j<mids.length;j++){
-    const t = b[mids[j][0]];
+    const t = ticksToSec(b[mids[j][0]]);
     const x = (t * invTotal) * innerW;
     const y = (1 - evalEnvelope(params, t)) * innerH;
     dotLabel(x, y, mids[j][1]);
@@ -341,7 +364,7 @@ function draw(){
   ctx.restore();
 
   // Note-off guide
-  const noteOffX = marginL + (b[I.NOTE_OFF] * invTotal) * innerW;
+  const noteOffX = marginL + (ticksToSec(b[I.NOTE_OFF]) * invTotal) * innerW;
   noteOffEl.style.left = `${noteOffX}px`;
 }
 
@@ -437,18 +460,35 @@ function runTests(){
   const TLz = computeTimeline(Pz);
   const b = TLz.b, I = TLz.idx;
   ok('computeTimeline ordered', b[I.NOTE_ON] <= b[I.DELAY_END] && b[I.DELAY_END] <= b[I.ATTACK_END] && b[I.ATTACK_END] <= b[I.HOLD_END] && b[I.HOLD_END] <= b[I.DECAY_END] && b[I.DECAY_END] <= b[I.NOTE_OFF] && b[I.NOTE_OFF] <= b[I.RELEASE_END]);
-  ok('total equals release end', near(b[I.TOTAL_END], b[I.RELEASE_END]));
-  ok('midpoints centered', near(b[I.ATTACK_MID], (b[I.DELAY_END]+b[I.ATTACK_END])/2) && near(b[I.DECAY_MID], (b[I.HOLD_END]+b[I.DECAY_END])/2) && near(b[I.RELEASE_MID], (b[I.NOTE_OFF]+b[I.RELEASE_END])/2));
+  ok('total equals release end', b[I.TOTAL_END] === b[I.RELEASE_END]);
+  ok('midpoints centered', b[I.ATTACK_MID] === ((b[I.DELAY_END]+b[I.ATTACK_END])>>>1) && b[I.DECAY_MID] === ((b[I.HOLD_END]+b[I.DECAY_END])>>>1) && b[I.RELEASE_MID] === ((b[I.NOTE_OFF]+b[I.RELEASE_END])>>>1));
+
+  // 0b) ticks <-> seconds round-trip within 1 tick
+  const tSec = 1.234;
+  ok('ticks<->sec roundtrip', Math.abs(ticksToSec(secToTicks(tSec)) - tSec) <= SEC_PER_TICK);
 
   // 1) powerCurve01 endpoints & linearity
   ok('powerCurve01(0,p)=0 for p∈{-20,-3,0,3,20}', [-20,-3,0,3,20].every(p=> near(powerCurve01(0,p),0)));
   ok('powerCurve01(1,p)=1 for p∈{-20,-3,0,3,20}', [-20,-3,0,3,20].every(p=> near(powerCurve01(1,p),1)));
   ok('powerCurve01 linear at p=0', [0,0.25,0.5,0.75,1].every(x=> near(powerCurve01(x,0), x, 1e-9)));
 
-  // 2) 16-bit control buffer properties (sanity placeholder; builder not present in this version)
-  // (Optional future: add buildControlBuffer() tests when enabling control-rate buffer.)
+  // 2) 16-bit tick timeline properties
+  const Pt = {delay:0.2, attack:0.3, hold:0.1, decay:0.2, sustain:0.5, release:0.4, gate:0.0};
+  const TLt = computeTimeline(Pt);
+  ok('Ticks within 0..65535', (()=>{ const b=TLt.b; for(let i=0;i<b.length;i++){ if(b[i]<0||b[i]>U16_MAX) return false; } return true; })());
+  ok('Total end equals release end (ticks)', TLt.b[TLt.idx.TOTAL_END] === TLt.b[TLt.idx.RELEASE_END]);
+  ok('Midpoints are integer mid-ticks', (
+    TLt.b[TLt.idx.ATTACK_MID] === ((TLt.b[TLt.idx.DELAY_END] + TLt.b[TLt.idx.ATTACK_END]) >>> 1) &&
+    TLt.b[TLt.idx.DECAY_MID]  === ((TLt.b[TLt.idx.HOLD_END]  + TLt.b[TLt.idx.DECAY_END])  >>> 1) &&
+    TLt.b[TLt.idx.RELEASE_MID]=== ((TLt.b[TLt.idx.NOTE_OFF]   + TLt.b[TLt.idx.RELEASE_END])>>> 1)
+  ));
 
-  // 3) Envelope midpoints at t=50% reflect power mapping
+  // 2b) Sum-of-segments -> end tick equality
+  const Px = {delay:0.11, attack:0.22, hold:0.33, decay:0.44, gate:0.55, release:0.66};
+  const TLx = computeTimeline(Px);
+  ok('TOTAL_END == secToTicks(sum secs)', TLx.b[TLx.idx.TOTAL_END] === secToTicks(totalLength(Px)));
+
+  // 3) Envelope midpoints at t=50% reflect power mapping at t=50% reflect power mapping
   const P = {...params, delay:0, attack:1, hold:0, decay:1, release:1, gate:0.2, sustain:0.7, attack_power:2, decay_power:-1, release_power:1};
   ok('Attack midpoint equals mapped power', near(evalEnvelope(P, 0.5 * P.attack), powerCurve01(0.5, P.attack_power), 1e-6));
   ok('Decay midpoint equals mapped power', near(evalEnvelope(P, P.attack + 0.5 * P.decay), lerp(1, P.sustain, powerCurve01(0.5, P.decay_power)), 1e-6));
@@ -461,7 +501,7 @@ function runTests(){
 
   // 5) Range safety: envelope stays in [0,1]
   const P3 = {...params, delay:0.1, attack:0.2, hold:0.2, decay:0.2, release:0.2, gate:0.3, sustain:0.65, attack_power:20, decay_power:-20, release_power:20};
-  const TL3 = computeTimeline(P3); const total3 = TL3.b[TL3.idx.TOTAL_END];
+  const TL3 = computeTimeline(P3); const total3 = ticksToSec(TL3.b[TL3.idx.TOTAL_END]);
   let inRange = true; for(let i=0;i<=200;i++){ const y=evalEnvelope(P3, (i/200)*total3); if (y< -1e-6 || y>1+1e-6) { inRange=false; break; } }
   ok('Envelope output clamped to [0,1]', inRange);
 
@@ -469,13 +509,13 @@ function runTests(){
   function isMonoInc(arr){ for(let i=1;i<arr.length;i++){ if(arr[i] + 1e-6 < arr[i-1]) return false; } return true; }
   function isMonoDec(arr){ for(let i=1;i<arr.length;i++){ if(arr[i] - 1e-6 > arr[i-1]) return false; } return true; }
   const Pa = {delay:0, attack:0.6, hold:0, decay:0, release:0, gate:0, sustain:1, attack_power:10, decay_power:0, release_power:0};
-  const TL_a = computeTimeline(Pa); const valsA = Array.from({length:50},(_,i)=> evalEnvelope(Pa, (i/49)*TL_a.b[TL_a.idx.ATTACK_END]));
+  const TL_a = computeTimeline(Pa); const valsA = Array.from({length:50},(_,i)=> evalEnvelope(Pa, (i/49)*ticksToSec(TL_a.b[TL_a.idx.ATTACK_END])));
   ok('Attack monotonic non-decreasing', isMonoInc(valsA));
   const Pd = {delay:0, attack:0, hold:0, decay:0.6, release:0, gate:0, sustain:0.4, attack_power:0, decay_power:-10, release_power:0};
-  const TL_d = computeTimeline(Pd); const valsD = Array.from({length:50},(_,i)=> evalEnvelope(Pd, TL_d.b[TL_d.idx.HOLD_END] + (i/49)*(TL_d.b[TL_d.idx.DECAY_END]-TL_d.b[TL_d.idx.HOLD_END])));
+  const TL_d = computeTimeline(Pd); const valsD = Array.from({length:50},(_,i)=> evalEnvelope(Pd, ticksToSec(TL_d.b[TL_d.idx.HOLD_END]) + (i/49)*(ticksToSec(TL_d.b[TL_d.idx.DECAY_END]) - ticksToSec(TL_d.b[TL_d.idx.HOLD_END]))));
   ok('Decay monotonic towards sustain', isMonoDec(valsD));
   const Pr = {delay:0, attack:0, hold:0, decay:0, release:0.6, gate:0, sustain:0.7, attack_power:0, decay_power:0, release_power:10};
-  const TL_r = computeTimeline(Pr); const valsR = Array.from({length:50},(_,i)=> evalEnvelope(Pr, TL_r.b[TL_r.idx.NOTE_OFF] + (i/49)*(TL_r.b[TL_r.idx.RELEASE_END]-TL_r.b[TL_r.idx.NOTE_OFF])));
+  const TL_r = computeTimeline(Pr); const valsR = Array.from({length:50},(_,i)=> evalEnvelope(Pr, ticksToSec(TL_r.b[TL_r.idx.NOTE_OFF]) + (i/49)*(ticksToSec(TL_r.b[TL_r.idx.RELEASE_END]) - ticksToSec(TL_r.b[TL_r.idx.NOTE_OFF]))));
   ok('Release monotonic non-increasing', isMonoDec(valsR));
 
   // 7) Preset powers transformed at init so bends match slider behavior
