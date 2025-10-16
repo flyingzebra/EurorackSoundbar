@@ -1,9 +1,15 @@
+<!--
+// Copyright (c) 2025 Freddy Vandriessche.
+// notice: https://raw.githubusercontent.com/RetroAppleJS/AppleII-IDE/main/LICENSE.md
+//
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vital-Style Envelope Curve – Canvas</title>
+  <title>Vital-Style Envelope Curve – Canvas · v1.0</title>
   <style>
     :root { --bg:#0b0f14; --panel:#0f1621; --ink:#d8e2ff; --muted:#7b8aa5; --accent:#7dd3fc; }
     *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:12px/1.4 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -27,7 +33,7 @@
 </head>
 <body>
   <header>
-    <h1>Vital‑style Envelope Curve (Delay / Attack / Hold / Decay / Sustain / Release)</h1>
+    <h1>Vital‑style Envelope Curve (Delay / Attack / Hold / Decay / Sustain / Release) <span class="badge">v1.0</span></h1>
   </header>
 
   <div class="wrap">
@@ -46,7 +52,7 @@
       <div class="row" style="visibility: hidden"><label id="label_gate"></label><input id="gate" type="range" min="0" max="4" step="0.01" /><div class="value" id="gate_v"></div></div>
       
       <div class="grid-toggle"><button id="fit">Fit to View</button><button id="reset">Reset from preset</button></div>
-      <p class="hint">Time sliders have Vital's logarithmic feel (γ=4 in patch units) while values show seconds. Curve knobs are −20…+20.</p>
+      <p class="hint">Time sliders have Vital's logarithmic feel (power2=2 → x^4 in patch units) while values show seconds. Curve knobs are −20…+20.</p>
 
       <details style="margin-top:8px">
         <summary>Diagnostics / Tests</summary>
@@ -73,16 +79,17 @@
 
 <script>
 // === Config ===
+const VERSION = 'v1.0';
 const ENV_INDEX = 1; // configurable envelope number for labels
 
 // === Hard-coded parameter scaling (Vital patch units -> UI seconds / knob units)
-// Time params use a power-law: seconds = secMax * (raw/rawMax)^gamma (γ = 4)
+// Time params use a power-law: seconds = secMax * (raw/rawMax)^(2^power2)  (with power2=2 ⇒ x^4)
 const PARAM_SCALES = {
-  env_n_attack:        { type:'pow', rawMax: 2.378420114517212, secMax: 32, gamma: 4 },
-  env_n_decay:         { type:'pow', rawMax: 2.378420114517212, secMax: 32, gamma: 4 },
-  env_n_release:       { type:'pow', rawMax: 2.378420114517212, secMax: 32, gamma: 4 },
-  env_n_delay:         { type:'pow', rawMax: 1.4142135381698608, secMax: 4,  gamma: 4 },
-  env_n_hold:          { type:'pow', rawMax: 1.4142135381698608, secMax: 4,  gamma: 4 },
+  env_n_attack:        { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
+  env_n_decay:         { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
+  env_n_release:       { type:'pow2', rawMax: 2.378420114517212, secMax: 32, power2: 2 },
+  env_n_delay:         { type:'pow2', rawMax: 1.4142135381698608, secMax: 4,  power2: 2 },
+  env_n_hold:          { type:'pow2', rawMax: 1.4142135381698608, secMax: 4,  power2: 2 },
   // Linear params
   env_n_sustain:       { type:'linear', factor: 1 },
   env_n_attack_power:  { type:'linear', factor: 1 },
@@ -93,30 +100,35 @@ const PARAM_SCALES = {
 // Helpers to expand env_n_* names with the current index
 const keyN = (k) => k.replace('env_n_', `env_${ENV_INDEX}_`);
 
-// Power-law converters
-function fromPatchUnitsPow(raw, rawMax, secMax, gamma){
+// Power-law converters using repeated squaring (power2=number of squarings). Faster than Math.pow and
+// correct for fractional inputs (bitwise shifts would coerce to 32-bit ints and are incorrect for 0..1).
+function fromPatchUnitsPow2(raw, rawMax, secMax, power2){
   if (!isFinite(rawMax) || rawMax <= 0 || !isFinite(secMax) || secMax < 0) return 0;
-  const x = Math.max(0, Math.min(1, raw / rawMax));
-  return secMax * Math.pow(x, gamma);
+  let x = Math.max(0, Math.min(1, raw / rawMax));
+  // apply x -> x^(2^power2) by squaring power2 times
+  for (let i=0;i<power2;i++) x *= x; // power2=2 => x^4
+  return secMax * x;
 }
-function toPatchUnitsPow(seconds, rawMax, secMax, gamma){
+function toPatchUnitsPow2(seconds, rawMax, secMax, power2){
   if (!isFinite(secMax) || secMax <= 0 || !isFinite(rawMax) || rawMax < 0) return 0;
-  const y = Math.max(0, Math.min(1, seconds / secMax));
-  return rawMax * Math.pow(y, 1/gamma);
+  let y = Math.max(0, Math.min(1, seconds / secMax));
+  // inverse: y -> y^(1/(2^power2)) via repeated sqrt
+  for (let i=0;i<power2;i++) y = Math.sqrt(y); // power2=2 => 4th root
+  return rawMax * y;
 }
 
 // Convert patch units -> UI units (seconds or knob)
 function fromPatchUnits(name, value){
   const e = PARAM_SCALES[name];
   if (!e) return value;
-  if (e.type === 'pow') return fromPatchUnitsPow(value, e.rawMax, e.secMax, e.gamma);
+  if (e.type === 'pow2') return fromPatchUnitsPow2(value, e.rawMax, e.secMax, e.power2);
   return value * (e.factor ?? 1);
 }
 // Convert UI units -> patch units (for export)
 function toPatchUnits(name, value){
   const e = PARAM_SCALES[name];
   if (!e) return value;
-  if (e.type === 'pow') return toPatchUnitsPow(value, e.rawMax, e.secMax, e.gamma);
+  if (e.type === 'pow2') return toPatchUnitsPow2(value, e.rawMax, e.secMax, e.power2);
   const f = (e.factor ?? 1);
   return f !== 0 ? value / f : 0;
 }
@@ -508,3 +520,4 @@ runTests();
 </script>
 </body>
 </html>
+
