@@ -12,7 +12,7 @@ It all started with buying an all-in-one furnished hammer-action piano with buil
 <a href=https://github.com/flyingzebra/EurorackSoundbar/blob/main/illustrations/Piano_Speaker_Glance.png><img src="/illustrations/Piano_Speaker_Glance.png?raw=true" width=100% block></a>
 
 
-# Requirements
+# Eurorack Soundbar Requirements
 ## Furniture
 1.1) Elegant & aesthetically matching the MIDI keyboard<br>
 1.2) Providing table surface fitting Piano Keyboard + Soundbar.<br>
